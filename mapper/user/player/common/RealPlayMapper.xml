@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace = "user.player.common.RealPlayMapper">
+
+<resultMap type = "RecipeIngreDTO" id = "PlayerRecipeResultMap">
+	<id property="recipeName" column="FOOD_NAME" />
+	<collection property="ingreList" ofType="IngreDTO">
+		<id property="no" column="INGRE_NO" />
+		<result property="name" column="INGRE_NAME" />
+		<result property="price" column="INGRE_PRICE" />
+		<result property="img" column="INGRE_IMG" />
+	</collection>
+		
+</resultMap>
+
+	<select id = "searchRecipeByRandomRecipeCode" parameterType = "playerDTO"  resultMap = "PlayerRecipeResultMap">
+	SELECT
+		R.FOOD_NAME
+		,I.*
+	  FROM RECIPE R
+	  JOIN PLAYER_RECIPE PR ON (R.RECIPE_NO = PR.RECIPE_NO)
+	  JOIN RECIPE_INGRE PI ON (PR.RECIPE_NO = PI.RECIPE_NO)
+	  JOIN INGRE I ON (PI.INGRE_NO = I.INGRE_NO)
+	 WHERE PR.PLAYER_NAME = #{ name }
+	</select>
+
+</mapper>

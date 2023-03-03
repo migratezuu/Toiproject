@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="user.player.common.PlayerMapper">
+
+   <resultMap type="PlayerDTO"
+      id="playerResultMap">
+      <id property="name" column="PLAYER_NAME" />
+      <result property="id" column="PLAYER_ID" />
+      <result property="pass" column="PLAYER_PASS" />
+      <result property="email" column="PLAYER_EMAIL" />
+      <result property="gold" column="PLAYER_GOLD" />
+      <result property="exp" column="PLAYER_EXP" />
+   </resultMap>
+	
+
+   <insert id="insertNewPlayer" parameterType="PlayerDTO">
+	  INSERT
+        INTO PLAYER
+      (
+        PLAYER_NAME
+      , PLAYER_ID
+      , PLAYER_PASS
+      , PLAYER_EMAIL
+      , PLAYER_GOLD
+      , PLAYER_EXP
+      )
+      VALUES
+      (
+        #{name}
+      , #{id}
+      , #{pass}
+      , #{email}
+      , DEFAULT
+      , DEFAULT
+      )
+   </insert>
+   
+   <insert id="insertPlayerRecipe" parameterType="PlayerRecipeDTO">
+  	  INSERT INTO PLAYER_RECIPE VALUES (#{PlayerName},#{recipeNo})
+  	  
+   </insert>
+   
+   <insert id="insertPlayerStore" parameterType="PlayerDTO">
+  	  INSERT INTO PLAYER_STORE VALUES (#{name},1)
+   </insert>
+   
+   <insert id="insertPlayerIngre" parameterType="PlayerDTO">
+  	  	INSERT 
+		  INTO STORAGE A
+		(
+		  A.PLAYER_NAME
+		, A.INGRE_NO
+		, A.INGRE_CNT
+		) 
+		(
+		SELECT DISTINCT B.PLAYER_NAME
+		     , C.INGRE_NO
+		     , 3
+		  FROM PLAYER_RECIPE B
+		  JOIN RECIPE_INGRE  C ON ( B.RECIPE_NO = C.RECIPE_NO )
+		 WHERE B.PLAYER_NAME = #{name}
+		)
+   </insert>
+   
+   <select id="selectPlayer" parameterType = "hashmap" resultMap="playerResultMap">
+      SELECT
+            A.PLAYER_NAME
+          , A.PLAYER_ID
+          , A.PLAYER_PASS
+          , A.PLAYER_EMAIL
+          , A.PLAYER_GOLD
+          , A.PLAYER_EXP
+        FROM PLAYER A
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+        <if test="id != null">
+              A.PLAYER_ID=#{id}
+        </if>        
+        <if test="pass != null">
+           AND   A.PLAYER_PASS=#{pass}
+        </if>
+        <if test="email != null">
+           AND   A.PLAYER_EMAIL=#{email}
+        </if>
+        <if test="name != null">
+           AND   A.PLAYER_NAME=#{name}
+        </if>        
+        </trim>
+   </select>
+   
+   <delete id="deletePlayer" parameterType="PlayerDTO">
+   		DELETE FROM PLAYER WHERE PLAYER_NAME = #{name}
+   </delete>
+
+
+
+
+</mapper>

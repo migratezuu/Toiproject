@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="user.player.common.ManagerMapper">
+
+	<resultMap type="IngreDTO" id="ingreResultMap">
+		<id property="no" column="INGRE_NO" />
+		<result property="name" column="INGRE_NAME" />
+		<result property="price" column="INGRE_PRICE" />
+		<result property="img" column="INGRE_IMG" />
+	</resultMap>
+	
+	<resultMap type="RecipeDTO" id="recipeResultMap">
+		<id property="no" column="RECIPE_NO" />
+		<result property="name" column="FOOD_NAME" />
+		<result property="recipePrice" column="RECIPE_PRICE" />
+		<result property="foodPrice" column="FOOD_PRICE" />
+		<result property="exp" column="FOOD_EXP" />
+	</resultMap>
+	
+	<resultMap type="RecipeIngreDTO" id="recipeIngreResultMap">
+		<id property="no" column="RECIPE_NO" />
+		<collection property="ingreList" ofType="IngreDTO">
+			<id property="no" column="INGRE_NO" />
+			<result property="name" column="INGRE_NAME" />
+			<result property="price" column="INGRE_PRICE" />
+			<result property="img" column="INGRE_IMG" />
+		</collection>
+	</resultMap>	
+	
+	<resultMap type="StoreDTO" id="storeResultMap">
+		<id property="level" column="STORE_LEVEL" />
+		<result property="name" column="STORE_NAME" />
+		<result property="price" column="STORE_PRICE" />
+		<result property="maxRecipe" column="MAX_RECIPE" />
+		<result property="exp" column="STORE_EXP" />
+	</resultMap>
+
+
+    <!-- 재료 관리 -->
+	<select id="selectIngreByName" parameterType="IngreDTO" resultMap="ingreResultMap">
+		SELECT
+			   A.INGRE_NO
+			 , A.INGRE_NAME
+			 , A.INGRE_PRICE
+			 , A.INGRE_IMG
+	 	  FROM INGRE A
+	 	 WHERE A.INGRE_NAME = #{name}
+	 	    OR A.INGRE_IMG = #{img}
+
+	</select>
+
+	<insert id="insertNewIngre" parameterType="IngreDTO">
+		INSERT
+		  INTO INGRE A
+		(
+		  A.INGRE_NO
+		, A.INGRE_NAME
+		, A.INGRE_PRICE
+		, A.INGRE_IMG
+		)
+		VALUES
+		(
+		  SEQ_INGRE_NO.NEXTVAL
+		, #{name}
+		, #{price}
+		, #{img}
+		)
+	</insert>
+	
+	<select id="selectAllIngre" parameterType="hashmap" resultMap="ingreResultMap">
+		SELECT  
+      		   A.INGRE_NO
+     		 , A.INGRE_NAME
+     		 , A.INGRE_PRICE
+    		 , A.INGRE_IMG
+		  FROM ( SELECT ROWNUM R
+		  			  , B.*
+         		   FROM ( SELECT 
+                      			 C.*
+                 		    FROM INGRE C
+                		   ORDER BY C.INGRE_NO
+              			) B
+       		   ) A
+        <if test="first != null and second != null ">
+		 WHERE A.R BETWEEN #{first} AND #{second}
+	    </if>
+	</select>
+	
+	<update id="modifyIngre" parameterType="hashmap" >
+	
+		UPDATE INGRE A
+		<trim prefix="SET" prefixOverrides=",">
+		  <if test="name != null">
+		  	, A.INGRE_NAME = #{name}
+		  </if>		  
+		  <if test="price != null">
+		  	, A.INGRE_PRICE = #{price}
+		  </if>
+		  <if test="img != null">
+		  	, A.INGRE_IMG = #{img}
+		  </if>  
+		</trim>
+	WHERE A.INGRE_NO=${no}
+	</update>
+	
+	<delete id="deleteIngre" parameterType="hashmap" >
+		DELETE 
+		  FROM INGRE A
+		 WHERE A.INGRE_NO = #{no}
+	</delete>
+	
+	
+	<!-- 레시피 관리 -->
+	<select id="selectRecipeByName" parameterType="RecipeDTO" resultMap="recipeResultMap">
+		SELECT
+			   A.RECIPE_NO
+			 , A.FOOD_NAME
+			 , A.RECIPE_PRICE
+			 , A.FOOD_PRICE
+			 , A.FOOD_EXP
+	 	  FROM RECIPE A
+	 	 WHERE A.FOOD_NAME = #{name}
+
+	</select>
+	
+	<insert id="insertNewRecipe" parameterType="RecipeDTO">
+		INSERT
+		  INTO RECIPE A
+		(
+		  A.RECIPE_NO
+		, A.FOOD_NAME
+		, A.RECIPE_PRICE
+		, A.FOOD_PRICE
+		, A.FOOD_EXP
+		)
+		VALUES
+		(
+		  SEQ_RECIPE_NO.NEXTVAL
+		, #{name}
+		, #{recipePrice}
+		, #{foodPrice}
+		, #{exp}
+		)
+	</insert>
+	
+	<insert id="insertRecipeIngre" parameterType="hashmap">
+		INSERT
+		  INTO RECIPE_INGRE A
+		(
+		  A.RECIPE_NO
+   		, A.INGRE_NO
+		)
+		VALUES
+		(
+		  (SELECT B.RECIPE_NO
+		  	 FROM RECIPE B
+		  	WHERE B.FOOD_NAME = #{recipe}
+		  )
+		, (SELECT C.INGRE_NO
+		  	 FROM INGRE C
+		  	WHERE C.INGRE_NAME = #{ingre}
+		  )
+		)
+	</insert>
+	
+	<select id="selectRecipeIngre" parameterType="hashmap" resultMap="ingreResultMap">
+		SELECT  
+      		   A.INGRE_NO
+     		 , A.INGRE_NAME
+     		 , A.INGRE_PRICE
+    		 , A.INGRE_IMG 
+		  FROM RECIPE_INGRE B
+		  JOIN INGRE A ON (A.INGRE_NO = B.INGRE_NO)
+		 WHERE B.RECIPE_NO = #{no}
+	
+	</select>
+	
+	<select id="selectAllRecipe" parameterType="hashmap" resultMap="recipeResultMap">
+		SELECT  
+      		   A.RECIPE_NO
+     		 , A.FOOD_NAME
+     		 , A.RECIPE_PRICE
+    		 , A.FOOD_PRICE
+		 	 , A.FOOD_EXP
+		  FROM ( SELECT ROWNUM R
+		  			  , B.*
+         		   FROM ( SELECT 
+                      			 C.*
+                 		    FROM RECIPE C
+                		   ORDER BY C.RECIPE_NO
+              			) B
+       		   ) A
+		 WHERE A.R BETWEEN #{first} AND #{second}
+	</select>
+	
+	<update id="modifyRecipe" parameterType="hashmap" >
+	
+		UPDATE RECIPE A
+		<trim prefix="SET" prefixOverrides=",">
+		  <if test="name != null">
+		  	, A.FOOD_NAME = #{name}
+		  </if>		  
+		  <if test="recipePrice != null">
+		  	, A.RECIPE_PRICE = #{recipePrice}
+		  </if>
+		  <if test="foodPrice != null">
+		  	, A.FOOD_PRICE = #{foodPrice}
+		  </if> 
+		  <if test="exp != null">
+		  	, A.FOOD_EXP = #{exp}
+		  </if>  
+		</trim>
+	WHERE A.RECIPE_NO=${no}
+	</update>
+	
+	<delete id="deleteRecipe" parameterType="hashmap" >
+		DELETE 
+		  FROM RECIPE A
+		 WHERE A.RECIPE_NO = #{no}
+	</delete>
+	
+	<delete id="deleteRecipeIngre" parameterType="hashmap" >
+		DELETE 
+		  FROM RECIPE_INGRE A
+		 WHERE A.RECIPE_NO = ( SELECT B.RECIPE_NO
+		  	 	   				 FROM RECIPE B
+		  		  				WHERE B.FOOD_NAME = #{recipe}
+		  	   				 )
+		   AND A.INGRE_NO = ( SELECT C.INGRE_NO
+		  	 	   			    FROM INGRE C
+		  		  			   WHERE C.INGRE_NAME = #{ingre}
+		  	   				)
+	</delete>
+	
+	<!-- 확장권 관리 -->
+	<select id="selectStoreByName" parameterType="StoreDTO" resultMap="storeResultMap">
+		SELECT
+			   A.STORE_LEVEL
+			 , A.STORE_NAME
+			 , A.STORE_PRICE
+			 , A.MAX_RECIPE
+			 , A.STORE_EXP
+	 	  FROM STORE A
+	 	 WHERE A.STORE_NAME = #{name}
+
+	</select>
+	
+	<insert id="insertNewStore" parameterType="StoreDTO">
+		INSERT
+		  INTO STORE A
+		(
+		  A.STORE_LEVEL
+		, A.STORE_NAME
+		, A.STORE_PRICE
+		, A.MAX_RECIPE
+		, A.STORE_EXP
+		)
+		VALUES
+		(
+		  #{level}
+		, #{name}
+		, #{price}
+		, #{maxRecipe}
+		, #{exp}
+		)
+	</insert>
+	
+	<select id="selectAllStore" parameterType="hashmap" resultMap="storeResultMap">
+		SELECT  
+      		   A.STORE_LEVEL
+     		 , A.STORE_NAME
+     		 , A.STORE_PRICE
+    		 , A.MAX_RECIPE
+		 	 , A.STORE_EXP
+		  FROM ( SELECT ROWNUM R
+		  			  , B.*
+         		   FROM ( SELECT 
+                      			 C.*
+                 		    FROM STORE C
+                		   ORDER BY C.STORE_LEVEL
+              			) B
+       		   ) A
+		 WHERE A.R BETWEEN #{first} AND #{second}
+	</select>
+	
+	<update id="modifyStore" parameterType="hashmap" >
+	
+		UPDATE STORE A
+		<trim prefix="SET" prefixOverrides=",">
+		  <if test="level != null">
+		  	, A.STORE_LEVEL = #{level}
+		  </if>		  
+		  <if test="name != null">
+		  	, A.STORE_NAME = #{name}
+		  </if>		  
+		  <if test="recipePrice != null">
+		  	, A.STORE_PRICE = #{price}
+		  </if>
+		  <if test="foodPrice != null">
+		  	, A.MAX_RECIPE = #{maxRecipe}
+		  </if> 
+		  <if test="exp != null">
+		  	, A.STORE_EXP = #{exp}
+		  </if>  
+		</trim>
+	WHERE A.STORE_LEVEL=${tempLevel}
+	</update>
+	
+	<delete id="deleteStore" parameterType="hashmap" >
+		DELETE 
+		  FROM STORE A
+		 WHERE A.STORE_LEVEL=${level}
+	</delete>
+</mapper>
